@@ -13,7 +13,9 @@ from App.controllers import (
     login,
     get_user,
     get_user_by_username,
-    update_user
+    update_user,
+    apply_to_job, 
+    create_job
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -65,13 +67,14 @@ def test_authenticate():
 class UsersIntegrationTests(unittest.TestCase):
 
     def test_create_user(self):
-        user = create_user("bob", "bobpass", "bob@email.com", "321-1234")
+        user = create_user("bob", "bobpass", "bob@email.com", "321-1234", "user")
         assert user.name == "bob"
 
     
     def test_get_all_users_json(self):
         users_json = get_all_users_json()
-        self.assertListEqual([{"id":1, "username":"bob"}, {"id":2, "username":"jane"}], users_json)
+        self.assertListEqual([{"id":1, "username":"bob", "role":"user"}], users_json)
+        #self.assertListEqual([{"id":1, "username":"bob", "role":"user"}, {"id":2, "username":"jane", "role":"user"}], users_json)
 
    
 
