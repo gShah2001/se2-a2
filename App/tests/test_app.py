@@ -16,7 +16,8 @@ from App.controllers import (
     update_user,
     apply_to_job, 
     create_job,
-    get_all_applications_json
+    get_all_applications_json,
+    get_all_jobs_json
 )
 
 LOGGER = logging.getLogger(__name__)
