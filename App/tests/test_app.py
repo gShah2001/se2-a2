@@ -15,7 +15,8 @@ from App.controllers import (
     get_user_by_username,
     update_user,
     apply_to_job, 
-    create_job
+    create_job,
+    get_all_applications_json
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -51,29 +52,44 @@ class UserUnitTests(unittest.TestCase):
     #notpassing
 '''
 
-@pytest.fixture(autouse=True, scope="module")
-def empty_db():
-    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
-    create_db()
-    yield app.test_client()
-    db.drop_all()
+
 
 
 def test_authenticate():
     user = create_user("bob", "bobpass", "bob@email.com", "321-1234", "user")
     assert login("bob", "bobpass") != None
 
+@pytest.fixture()
+def clear_db():
+# This will run before each test
+    db.session.query(User).delete()  # Delete all records in the User table
+    db.session.commit()
+    yield
+    # This will run after each test (optional teardown)
+    db.session.query(User).delete()
+    db.session.commit()
 
 class UsersIntegrationTests(unittest.TestCase):
-
-    def test_create_user(self):
-        user = create_user("bob", "bobpass", "bob@email.com", "321-1234", "user")
-        assert user.name == "bob"
+    #@pytest.fixture(autouse=True, scope="module")
+    #def empty_db():
+    #    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
+    #    create_db()
+    #    yield app.test_client()
+    #    db.drop_all()
+    #    db.create_all()
 
     
+    @pytest.mark.usefixtures("clear_db")
+    def test_create_user(self):
+        #db.session.query(User).delete()  # Deletes all users
+        #db.session.commit()
+        user = create_user("rob", "robpass", "robbie@email.com", "321-1222", "user")
+        assert user.name == "rob"
+
+    @pytest.mark.usefixtures("clear_db")
     def test_get_all_users_json(self):
         users_json = get_all_users_json()
-        self.assertListEqual([{"id":1, "username":"bob", "role":"user"}], users_json)
+        self.assertListEqual([{"id":1, "username":"bob", "role":"user"}, {"id":2, "username":"rob", "role":"user"}], users_json)
         #self.assertListEqual([{"id":1, "username":"bob", "role":"user"}, {"id":2, "username":"jane", "role":"user"}], users_json)
 
    
@@ -81,10 +97,11 @@ class UsersIntegrationTests(unittest.TestCase):
 class JobsIntegrationTests(unittest.TestCase):
 
     def test_create_job(self):
-        job = create_job("Software Engineer", "Develop and maintain software", "TechCorp")
+        employer_id=1
+        job = create_job("Software Engineer", "Develop and maintain software", "TechCorp", employer_id)
         assert job.title == "Software Engineer"
 
-    def test_get_all_jobs_json():
+    def test_get_all_jobs_json(self):
         jobs_json = get_all_jobs_json()
         self.assertListEqual([
             {'id': 1, 'title': 'Software Engineer', 'description': 'Develop and maintain software.', 'company': 'TechCorp'},
@@ -100,3 +117,6 @@ class JobsIntegrationTests(unittest.TestCase):
         applications_json = get_all_applications_json(1)
         expected_applications = [{"user_id": 1, "job_id": 1}, {"user_id": 2, "job_id": 1}]
         self.assertListEqual(expected_applications, applications_json)
+
+if __name__ == '__main__':
+    unittest.main()
