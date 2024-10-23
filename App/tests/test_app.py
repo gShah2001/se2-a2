@@ -55,29 +55,33 @@ class UserUnitTests(unittest.TestCase):
 
 
 
+# @pytest.fixture(autouse=True, scope="module")
+# def empty_db():
+#     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
+#     create_db()
+#     yield 
+#     app.test_client()
+#     db.drop_all()
+  
+@pytest.fixture(autouse=True, scope="module")
+def empty_db():
+    # Set up the Flask application for testing
+    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
+    
+    # Activate application context for the fixture
+    with app.app_context():
+        db.create_all()  # Create all database tables before running tests
+        yield app.test_client()  # Provide a test client to use in the tests
+        
+        # Cleanup after tests run
+        db.drop_all()  # Drop all tables after the tests complete
 
 def test_authenticate():
     user = create_user("bob", "bobpass", "bob@email.com", "321-1234", "user")
     assert login("bob", "bobpass") != None
 
-@pytest.fixture()
-def clear_db():
-# This will run before each test
-    db.session.query(User).delete()  # Delete all records in the User table
-    db.session.commit()
-    yield
-    # This will run after each test (optional teardown)
-    db.session.query(User).delete()
-    db.session.commit()
-
 class UsersIntegrationTests(unittest.TestCase):
-    #@pytest.fixture(autouse=True, scope="module")
-    #def empty_db():
-    #    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
-    #    create_db()
-    #    yield app.test_client()
-    #    db.drop_all()
-    #    db.create_all()
+    
 
     
     @pytest.mark.usefixtures("clear_db")
